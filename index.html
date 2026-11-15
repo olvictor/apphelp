@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F7A6D">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Meu Personal LGMD</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&display=swap">
+<style>
+/* Layout: app de uma coluna, mobile-first, navegação fixa embaixo; cartões só onde há ação */
+:root{
+  --bg:#F3F6F5; --surface:#FFFFFF; --ink:#16302C; --muted:#5A6F6B; --line:#D9E3E0;
+  --accent:#1F7A6D; --accent-soft:#DCEFEA; --warn:#B4610E; --warn-soft:#FCEBD7; --stop:#B3261E; --stop-soft:#F9E0DE;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1A18; --surface:#16231F; --ink:#E4EEEB; --muted:#9BB0AB; --line:#2A3A36;
+  --accent:#5CC2B0; --accent-soft:#1D3A34; --warn:#F0A25A; --warn-soft:#3A2A18; --stop:#F08A82; --stop-soft:#3D1F1C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1A18; --surface:#16231F; --ink:#E4EEEB; --muted:#9BB0AB; --line:#2A3A36;
+  --accent:#5CC2B0; --accent-soft:#1D3A34; --warn:#F0A25A; --warn-soft:#3A2A18; --stop:#F08A82; --stop-soft:#3D1F1C; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55}
+.wrap{max-width:680px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 120px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:1.9rem;font-weight:700}
+h2{font-size:1.35rem;font-weight:700}
+h3{font-size:1.08rem;font-weight:700}
+p{margin:0}
+.eyebrow{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.stack{display:flex;flex-direction:column;gap:14px}
+.section{display:flex;flex-direction:column;gap:12px;margin-top:28px}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.pill{display:inline-block;font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.note{border-radius:12px;padding:12px 14px;font-size:.95rem}
+.note.warn{background:var(--warn-soft);color:var(--ink);border-left:4px solid var(--warn)}
+.note.stop{background:var(--stop-soft);color:var(--ink);border-left:4px solid var(--stop)}
+.note.ok{background:var(--accent-soft);color:var(--ink);border-left:4px solid var(--accent)}
+ul.clean{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+
+/* Semana */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:8px 0;text-align:center;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px;align-items:center}
+.day b{font-family:var(--display);font-size:.95rem}
+.day small{font-size:.7rem;color:var(--muted)}
+.day.sel{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.day.sel small{color:var(--surface)}
+.dot{width:6px;height:6px;border-radius:50%;background:transparent}
+.dot.on{background:var(--warn)}
+
+/* Lista de exercícios do dia */
+.ex{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-top:1px solid var(--line)}
+.ex:first-child{border-top:0}
+.ex input{width:26px;height:26px;margin-top:2px;accent-color:var(--accent);flex:none}
+.ex .txt{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.ex.done h3{text-decoration:line-through;color:var(--muted)}
+.dose{font-size:.9rem;color:var(--accent);font-weight:700}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-size:.9rem;text-decoration:underline;cursor:pointer;align-self:flex-start}
+.progress{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+
+/* Check-in */
+.scale{display:flex;gap:6px;flex-wrap:wrap}
+.scale button,.chip{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 12px;cursor:pointer;min-height:44px}
+.scale button.on,.chip.on{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+
+/* Biblioteca */
+details.lib{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+details.lib summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+details.lib summary::-webkit-details-marker{display:none}
+details.lib summary::after{content:"+";font-family:var(--display);font-size:1.4rem;color:var(--accent)}
+details.lib[open] summary::after{content:"–"}
+details.lib .in{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
+ol.steps{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:4px}
+
+/* Borg */
+.borg{display:grid;grid-template-columns:repeat(11,1fr);gap:3px;text-align:center;font-size:.8rem}
+.borg div{padding:8px 0;border-radius:6px;background:var(--line);font-weight:700}
+.borg .z{background:var(--accent);color:var(--surface)}
+.borg .h{background:var(--stop-soft);color:var(--stop)}
+
+/* Tabela alimentação */
+.meal{display:grid;grid-template-columns:6.5rem 1fr;gap:4px 12px;padding:10px 0;border-top:1px solid var(--line)}
+.meal:first-child{border-top:0}
+.meal b{font-family:var(--display)}
+@media (max-width:420px){.meal{grid-template-columns:1fr}}
+
+/* Navegação */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);z-index:5}
+nav.tabs .row{display:grid;grid-template-columns:repeat(5,1fr);width:100%;max-width:680px}
+nav.tabs button{font:inherit;font-size:.78rem;background:none;border:0;color:var(--muted);padding:10px 2px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:56px}
+nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button.on{color:var(--accent);font-weight:700}
+button:focus-visible,summary:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.src a{color:var(--accent);word-break:break-word}
+.src li{margin-bottom:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="stack" style="gap:6px">
+    <span class="eyebrow">Distrofia de cinturas 2B · disferlinopatia</span>
+    <h1 id="hello">Meu Personal</h1>
+  </header>
+
+  <!-- HOJE -->
+  <main id="v-hoje" class="view">
+    <div class="section">
+      <div class="week" id="week"></div>
+    </div>
+    <div class="section">
+      <div class="card stack">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap">
+          <h2 id="dayTitle"></h2><span class="pill" id="dayTag"></span>
+        </div>
+        <p class="muted" id="dayGoal"></p>
+        <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+        <p class="muted" id="count" style="font-size:.9rem"></p>
+        <div id="dayList"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Como você está hoje?</h2>
+      <div class="card stack">
+        <div class="stack" style="gap:8px">
+          <span class="eyebrow">Energia agora</span>
+          <div class="scale" id="energy"></div>
+        </div>
+        <div class="stack" style="gap:8px">
+          <span class="eyebrow">Dor ou cansaço muscular do treino anterior</span>
+          <div class="scale" id="sore"></div>
+        </div>
+        <div id="advice"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="note warn"><b>Regra de ouro:</b> treinar sempre no leve a moderado. Você deve conseguir conversar durante o exercício. Se no dia seguinte houver dor muscular forte ou mais fraqueza, o treino foi demais: diminua.</div>
+    </div>
+  </main>
+
+  <!-- TREINOS -->
+  <main id="v-treinos" class="view" hidden>
+    <div class="section">
+      <h2>Quanto esforço fazer</h2>
+      <p class="muted">Escala de esforço (Borg 0–10). Fique na faixa verde: de 3 a 4.</p>
+      <div class="borg" aria-label="Escala de esforço de 0 a 10">
+        <div>0</div><div>1</div><div>2</div><div class="z">3</div><div class="z">4</div><div>5</div><div class="h">6</div><div class="h">7</div><div class="h">8</div><div class="h">9</div><div class="h">10</div>
+      </div>
+      <div class="card stack" style="gap:6px">
+        <p><b>3–4 (ideal):</b> respiração um pouco mais rápida, mas dá para falar frases inteiras.</p>
+        <p><b>6 ou mais (evitar):</b> difícil falar, músculo "queimando", tremor. Pare e descanse.</p>
+      </div>
+    </div>
+    <div class="section">
+      <h2>O que evitar</h2>
+      <div class="note stop">
+        <ul class="clean">
+          <li><b>Exercícios excêntricos</b> (quando o músculo freia o movimento sob carga): descer escadas ou ladeiras como treino, agachamento descendo devagar com peso, corrida em descida.</li>
+          <li><b>Alta intensidade</b>: musculação pesada, saltos, corrida, treinos até a falha, crossfit/HIIT.</li>
+          <li><b>Treinar com dor muscular</b> que persiste do treino anterior.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Biblioteca de exercícios</h2>
+      <div class="scale" id="filters"></div>
+      <div class="stack" id="lib"></div>
+    </div>
+  </main>
+
+  <!-- ALIMENTAÇÃO -->
+  <main id="v-comida" class="view" hidden>
+    <div class="section">
+      <h2>Alimentação</h2>
+      <p class="muted">Não existe dieta comprovada que cure ou trave a disferlinopatia. O objetivo é proteger o músculo que existe, manter o peso adequado e cuidar dos ossos, do intestino e do coração.</p>
+    </div>
+    <div class="section" id="foodTips"></div>
+    <div class="section">
+      <h2>Exemplo de um dia</h2>
+      <div class="card" id="mealDay"></div>
+      <p class="muted" style="font-size:.9rem">Modelo de referência. Quantidades devem ser ajustadas por nutricionista, conforme peso, idade e exames.</p>
+    </div>
+    <div class="section">
+      <h2>Suplementos: o que a ciência diz</h2>
+      <div class="stack" id="supps"></div>
+    </div>
+  </main>
+
+  <!-- CUIDADOS -->
+  <main id="v-cuidados" class="view" hidden>
+    <div class="section">
+      <h2>Sinais para parar e procurar ajuda</h2>
+      <div class="note stop">
+        <ul class="clean">
+          <li><b>Urina escura</b> (cor de chá ou coca-cola) depois de esforço: procure pronto-atendimento. Pode ser lesão muscular grave (rabdomiólise).</li>
+          <li>Dor muscular forte que dura mais de 48 horas.</li>
+          <li>Fraqueza nova ou que piorou de repente.</li>
+          <li>Falta de ar, palpitação, dor no peito, desmaio.</li>
+          <li>Queda com batida forte na cabeça ou dor que não passa.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Boas práticas</h2>
+      <div class="stack" id="care"></div>
+    </div>
+    <div class="section">
+      <h2>Checklist de acompanhamento</h2>
+      <div class="card" id="checkups"></div>
+    </div>
+  </main>
+
+  <!-- FONTES -->
+  <main id="v-fontes" class="view" hidden>
+    <div class="section">
+      <h2>Sobre este app</h2>
+      <div class="note warn">Este conteúdo é educativo e foi montado a partir de diretrizes e estudos científicos. Ele <b>não substitui</b> o neurologista, o fisioterapeuta e o nutricionista. Mostre este plano para eles e ajuste o que for preciso.</div>
+      <p>O plano segue o que a literatura recomenda para disferlinopatia em quem anda com apoio: exercício aeróbico leve a moderado, fortalecimento leve sem ênfase excêntrica, alongamento diário para prevenir encurtamentos, equilíbrio com apoio e prevenção de quedas.</p>
+    </div>
+    <div class="section src">
+      <h2>Fontes</h2>
+      <ol>
+        <li>Jain Foundation. <a href="https://www.jain-foundation.org/patients-clinicians/understanding-dysferlinopathy/patients-clinicians-understanding-dysferlinopathy-symptoms-and-care-management/" target="_blank" rel="noopener">Understanding Dysferlinopathy: symptoms and care management</a>.</li>
+        <li>Jain Foundation. <a href="https://www.jain-foundation.org/patients-clinicians/for-healthcare-professionals/healthcare-professionals-faq/" target="_blank" rel="noopener">FAQ para profissionais de saúde</a>.</li>
+        <li>Institut de Myologie (2018). <a href="https://www.institut-myologie.org/en/2018/04/30/dysferlinopathies-and-physical-exercise-intensive-sport-should-be-avoided-in-people-who-are-asymptomatic/" target="_blank" rel="noopener">Dysferlinopathies and physical exercise: intensive sport should be avoided</a>.</li>
+        <li>Institut de Myologie. <a href="https://www.institut-myologie.org/en/?p=989" target="_blank" rel="noopener">Effects of exercise on dysferlinopathy</a>.</li>
+        <li>Frontiers in Neurology (2020). <a href="https://www.frontiersin.org/articles/10.3389/fneur.2020.613446/pdf" target="_blank" rel="noopener">Artigo sobre exercício físico e disferlinopatia</a>.</li>
+        <li>Biomolecules (2024). <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10968265" target="_blank" rel="noopener">The Dysferlinopathies Conundrum: clinical spectra, disease mechanism and genetic approaches for treatments</a>.</li>
+        <li>Walter MC et al. (2013). Treatment of dysferlinopathy with deflazacort: a double-blind, placebo-controlled clinical trial. <i>Orphanet J Rare Dis</i> 8:26.</li>
+        <li>Voet NBM et al. (2019). Strength training and aerobic exercise training for muscle disease. <i>Cochrane Database Syst Rev</i>.</li>
+        <li>Kley RA et al. (2013). Creatine for treating muscle disorders. <i>Cochrane Database Syst Rev</i>.</li>
+        <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3235880" target="_blank" rel="noopener">PMC3235880</a> — estudo sobre exercício em modelos de disferlinopatia.</li>
+      </ol>
+      <p class="muted" style="font-size:.9rem">No Brasil: ABDIM (Associação Brasileira de Distrofia Muscular) oferece orientação e reabilitação.</p>
+    </div>
+    <div class="section">
+      <button class="chip" id="reset">Apagar meu histórico deste aparelho</button>
+      <p class="muted" id="resetMsg" style="font-size:.9rem"></p>
+    </div>
+  </main>
+</div>
+
+<nav class="tabs" aria-label="Seções">
+  <div class="row">
+    <button data-v="hoje" class="on"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Hoje</button>
+    <button data-v="treinos"><svg viewBox="0 0 24 24"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg>Treinos</button>
+    <button data-v="comida"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 6c0-2 1-3 3-3"/></svg>Comida</button>
+    <button data-v="cuidados"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg>Cuidados</button>
+    <button data-v="fontes"><svg viewBox="0 0 24 24"><path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 9h8M8 13h6"/></svg>Fontes</button>
+  </div>
+</nav>
+
+<script>
+const EX = {
+  bike:{n:"Bicicleta ergométrica (de preferência reclinada)",cat:"Aeróbico",dose:"10–20 min · esforço 3–4",
+    how:["Ajuste o banco para o joelho ficar quase estendido embaixo.","Comece 3 min bem leve para aquecer.","Pedale em ritmo confortável, sem carga alta.","Termine com 2–3 min bem leve."],
+    why:"Pedalar trabalha o músculo de forma concêntrica (sem frear carga), por isso é o aeróbico mais indicado.",
+    care:"Comece com 10 min e aumente 2 min por semana, se não houver dor no dia seguinte."},
+  agua:{n:"Caminhada ou hidroginástica na piscina",cat:"Aeróbico",dose:"20–30 min · água na altura do peito",
+    how:["Entre com ajuda e apoio no corrimão.","Caminhe para frente e para os lados segurando na borda.","Movimente braços dentro da água."],
+    why:"A água reduz o peso do corpo e o risco de queda, permitindo se mover com menos esforço.",
+    care:"Água morna (28–32 °C) é melhor. Saia antes de ficar exausto; o cansaço aparece ao sair."},
+  caminhada:{n:"Caminhada leve no plano com apoio",cat:"Aeróbico",dose:"5–15 min · terreno plano",
+    how:["Use bengala ou andador.","Ande em local plano e conhecido.","Pare para descansar quando quiser."],
+    why:"Mantém a função de marcha e a independência.",care:"Evite ladeiras e descidas. Terreno irregular aumenta o risco de queda."},
+  pant:{n:"Alongamento de panturrilha",cat:"Alongamento",dose:"3 × 30 s cada perna · todos os dias",
+    how:["Sentado com a perna esticada, passe uma toalha na sola do pé.","Puxe a toalha devagar trazendo os dedos para você.","Segure 30 s sem dor, só tensão leve."],
+    why:"Na disferlinopatia a panturrilha costuma ser afetada cedo e o tendão de Aquiles tende a encurtar.",
+    care:"Nunca faça balanço. Alongamento deve dar sensação de esticar, nunca dor."},
+  isquio:{n:"Alongamento posterior da coxa",cat:"Alongamento",dose:"3 × 30 s cada perna",
+    how:["Sentado na beira da cadeira, estique uma perna com o calcanhar no chão.","Incline o tronco à frente com as costas retas.","Segure 30 s."],why:"Previne encurtamento que atrapalha a marcha.",care:"Apoie as mãos na coxa para não perder o equilíbrio."},
+  quadril:{n:"Alongamento da frente do quadril",cat:"Alongamento",dose:"2 × 30 s cada lado",
+    how:["Deitado de barriga para cima na beira da cama.","Abrace um joelho no peito.","Deixe a outra perna relaxada, esticada."],why:"Quem passa muito tempo sentado tende a encurtar os flexores do quadril.",care:"Faça na cama, sem precisar ir ao chão."},
+  quad:{n:"Contração da coxa com toalha (isométrico)",cat:"Força leve",dose:"2 × 10 · segurar 5 s",
+    how:["Sentado ou deitado, perna esticada com toalha enrolada embaixo do joelho.","Empurre o joelho contra a toalha contraindo a coxa.","Segure 5 s e relaxe 5 s."],
+    why:"Isométrico fortalece sem movimento excêntrico, o que é mais seguro.",care:"Força moderada, sem prender a respiração."},
+  ponte:{n:"Ponte de glúteo curta",cat:"Força leve",dose:"2 × 8 · segurar 3 s em cima",
+    how:["Deitado, joelhos dobrados, pés apoiados.","Suba o quadril só um pouco (poucos centímetros).","Segure 3 s e apoie de volta relaxando."],why:"Glúteos ajudam a levantar e a ficar em pé.",care:"Se cansar muito ou doer, substitua por apertar os glúteos sem subir."},
+  abd:{n:"Abertura de perna deitado de lado",cat:"Força leve",dose:"2 × 8 cada lado · sem peso",
+    how:["Deitado de lado, perna de baixo dobrada.","Abra a perna de cima um pouco.","Volte devagar e relaxe."],why:"Trabalha a lateral do quadril, importante para o equilíbrio na marcha.",care:"Amplitude pequena. Sem caneleira."},
+  remada:{n:"Remada sentada com elástico leve",cat:"Força leve",dose:"2 × 10 · elástico mais fraco",
+    how:["Sentado, elástico preso à frente na altura do peito.","Puxe os cotovelos para trás aproximando as escápulas.","Volte soltando sem resistir."],why:"Mantém força de costas e braços, úteis para transferências e uso do andador.",care:"O elástico deve ser leve o bastante para 15 repetições fáceis."},
+  braco:{n:"Elevação de braços sentado",cat:"Força leve",dose:"2 × 10 · sem peso",
+    how:["Sentado com as costas apoiadas.","Eleve os braços à frente até a altura dos ombros.","Abaixe e descanse."],why:"Ombros e cintura escapular podem ser afetados com o tempo; manter amplitude ajuda nas tarefas do dia.",care:"Se os ombros cansarem rápido, faça um braço de cada vez."},
+  sentar:{n:"Levantar da cadeira com apoio",cat:"Funcional",dose:"1–2 × 5 · cadeira alta com braços",
+    how:["Cadeira firme, alta, com braços.","Incline o tronco à frente e empurre com os braços para levantar.","Para sentar, use os braços para controlar a descida."],
+    why:"Treina uma tarefa essencial do dia a dia.",care:"Use bem os braços na hora de sentar: a descida é a parte excêntrica e deve ficar leve para as pernas."},
+  equil:{n:"Equilíbrio apoiado na bancada",cat:"Equilíbrio",dose:"3 × 30 s",
+    how:["Em pé, de frente para uma bancada firme, as duas mãos apoiadas.","Transfira o peso de uma perna para a outra devagar.","Avance para uma mão só, se estiver seguro."],why:"Reduz o risco de quedas, um dos maiores perigos na distrofia de cinturas.",care:"Sempre com alguém por perto no início. Nunca sem apoio."},
+  tornozelo:{n:"Bombeamento de tornozelo",cat:"Circulação",dose:"20 movimentos · várias vezes ao dia",
+    how:["Sentado ou deitado.","Mova os pés para cima e para baixo.","Depois faça círculos."],why:"Ajuda a circulação e mantém a mobilidade do tornozelo.",care:"Movimento leve, sem esforço."},
+  resp:{n:"Respiração diafragmática",cat:"Respiratório",dose:"5 min · 1–2 vezes ao dia",
+    how:["Sentado com as costas apoiadas, uma mão na barriga.","Inspire pelo nariz em 3 s, a barriga sobe.","Solte pela boca em 5 s, como soprando uma vela."],why:"Mantém a mobilidade do tórax e ajuda no relaxamento.",care:"Se sentir tontura, volte a respirar normal."}
+};
+
+const PLAN = [
+  {d:"Dom",t:"Descanso",tag:"Recuperação",goal:"Dia livre para o músculo se recuperar. Só alongar e respirar, se quiser.",ex:["pant","resp"]},
+  {d:"Seg",t:"Aeróbico leve",tag:"Cardio",goal:"Condicionamento sem forçar o músculo.",ex:["bike","pant","isquio","resp"]},
+  {d:"Ter",t:"Força leve + equilíbrio",tag:"Força",goal:"Manter força com exercícios leves e sem carga excêntrica.",ex:["quad","ponte","remada","braco","equil","pant"]},
+  {d:"Qua",t:"Água ou descanso ativo",tag:"Leve",goal:"Movimento suave. Piscina se possível; se não, caminhada curta no plano.",ex:["agua","caminhada","tornozelo","quadril"]},
+  {d:"Qui",t:"Aeróbico leve",tag:"Cardio",goal:"Repetir a bike de segunda, sem aumentar se houve dor.",ex:["bike","pant","isquio","resp"]},
+  {d:"Sex",t:"Força leve + funcional",tag:"Força",goal:"Força leve e treino de levantar da cadeira.",ex:["quad","abd","sentar","remada","equil","pant"]},
+  {d:"Sáb",t:"Mobilidade e alongamento",tag:"Leve",goal:"Alongar tudo com calma e se mover um pouco.",ex:["pant","isquio","quadril","tornozelo","resp","caminhada"]}
+];
+
+const FOOD = [
+  {h:"Proteína em todas as refeições",p:"Distribua proteína ao longo do dia (ovos, frango, peixe, carne magra, feijão, lentilha, iogurte, queijo). Uma referência comum para adultos é cerca de 1,0 a 1,2 g por kg de peso por dia, a confirmar com nutricionista e conforme a função dos rins."},
+  {h:"Peso adequado",p:"Excesso de peso sobrecarrega músculos já fracos e aumenta o risco de queda. Perda de peso sem querer também é ruim, porque leva massa muscular junto."},
+  {h:"Ossos: cálcio e vitamina D",p:"Com menos mobilidade, o risco de osteoporose sobe. Leite e derivados, sardinha, folhas verde-escuras e sol leve. Dosar vitamina D no sangue e suplementar só se o médico indicar."},
+  {h:"Intestino: fibras e água",p:"Menos movimento costuma causar intestino preso. Frutas, verduras, aveia, feijão e 2 litros de água por dia (salvo restrição médica)."},
+  {h:"Padrão mediterrâneo",p:"Azeite, peixes, castanhas, frutas, verduras e grãos integrais. É o padrão com melhor evidência para saúde geral e do coração."},
+  {h:"Evitar",p:"Ultraprocessados, excesso de açúcar e álcool. Álcool em excesso é tóxico para o músculo."}
+];
+const MEALS = [
+  ["Café","Pão integral com ovo mexido, 1 fruta (mamão ou banana), café com leite."],
+  ["Lanche","Iogurte natural com aveia ou castanhas."],
+  ["Almoço","Arroz, feijão, frango ou peixe grelhado, salada colorida com azeite, legumes."],
+  ["Lanche","Fruta + queijo branco ou um copo de leite."],
+  ["Jantar","Omelete ou carne magra, legumes refogados, salada; ou sopa com carne e legumes."],
+  ["Ceia","Opcional: leite ou iogurte, se tiver fome."]
+];
+const SUPPS = [
+  {h:"Vitamina D",tag:"Se houver falta",p:"Útil para os ossos quando o exame mostra nível baixo. Não há prova de que melhore a força na disferlinopatia."},
+  {h:"Creatina",tag:"Conversar com médico",p:"Revisão Cochrane mostrou pequeno ganho de força em algumas distrofias musculares, mas quase sem dados específicos para disferlinopatia. Só com acompanhamento e exame de rins."},
+  {h:"Corticoide (deflazacorte/prednisona)",tag:"Não recomendado",warn:true,p:"Um ensaio clínico controlado na disferlinopatia não mostrou benefício e houve tendência de piora da força. Diferente da distrofia de Duchenne."},
+  {h:"\"Fórmulas milagrosas\" da internet",tag:"Sem prova",warn:true,p:"Nenhum suplemento comprovadamente para ou reverte a doença. Desconfie de promessas."}
+];
+const CARE = [
+  {h:"Prevenção de quedas em casa",p:"Tire tapetes soltos, instale barras no banheiro e ao lado da cama, use luz noturna, cadeira de banho e calçado firme com sola antiderrapante."},
+  {h:"Equipe de reabilitação",p:"Fisioterapeuta para ajustar o plano, terapeuta ocupacional para adaptar tarefas e casa, e avaliação de órteses ou auxílios de marcha quando necessário."},
+  {h:"Descanso e sono",p:"Dormir 7–9 horas. Intercale tarefas pesadas com pausas ao longo do dia (conservação de energia). Não concentre esforço em um único dia."},
+  {h:"Remédios que merecem atenção",p:"Avise qualquer médico sobre a distrofia. Estatinas (para colesterol) podem afetar músculo: só com avaliação do neurologista. Antes de cirurgia, informe o anestesista sobre a doença muscular."},
+  {h:"Vacinas em dia",p:"Gripe, COVID e pneumonia, para proteger a respiração."},
+  {h:"Pesquisa e apoio",p:"A Jain Foundation mantém registro de pacientes e informa sobre estudos clínicos. No Brasil, a ABDIM ajuda com reabilitação e orientação."}
+];
+const CHECKS = ["Consulta com neurologista (pelo menos 1× ao ano)","Fisioterapia: reavaliar o plano a cada 3–6 meses","Eletrocardiograma e ecocardiograma periódicos","Prova de função pulmonar (espirometria)","Exames: vitamina D, CK e outros conforme o médico","Consulta com nutricionista"];
+
+/* armazenamento local (só neste aparelho) */
+const KEY="lgmd2b-personal-v1";
+let store={};
+try{store=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){store={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}}
+
+const today=new Date();
+function dateFor(dow){const d=new Date(today);d.setDate(today.getDate()-today.getDay()+dow);return d}
+function keyOf(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+let sel=today.getDay();
+const full=["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+function renderWeek(){
+  const w=document.getElementById("week");w.innerHTML="";
+  PLAN.forEach((p,i)=>{
+    const d=dateFor(i),k=keyOf(d),done=(store[k]&&store[k].done)||[];
+    const b=document.createElement("button");b.className="day"+(i===sel?" sel":"");
+    b.innerHTML=`<small>${p.d}</small><b>${d.getDate()}</b><span class="dot${done.length?" on":""}"></span>`;
+    b.setAttribute("aria-label",full[i]+(i===today.getDay()?" (hoje)":""));
+    b.onclick=()=>{sel=i;renderAll()};w.appendChild(b);
+  });
+}
+function renderDay(){
+  const p=PLAN[sel],d=dateFor(sel),k=keyOf(d);
+  store[k]=store[k]||{done:[]};const done=store[k].done;
+  document.getElementById("dayTitle").textContent=(sel===today.getDay()?"Hoje · ":full[sel]+" · ")+p.t;
+  document.getElementById("dayTag").textContent=p.tag;
+  document.getElementById("dayGoal").textContent=p.goal;
+  const list=document.getElementById("dayList");list.innerHTML="";
+  p.ex.forEach(id=>{
+    const e=EX[id],row=document.createElement("div");row.className="ex"+(done.includes(id)?" done":"");
+    const cid="c-"+sel+"-"+id;
+    row.innerHTML=`<input type="checkbox" id="${cid}" ${done.includes(id)?"checked":""}><div class="txt"><label for="${cid}"><h3>${esc(e.n)}</h3></label><span class="dose">${esc(e.dose)}</span><button class="linkbtn">Como fazer</button></div>`;
+    row.querySelector("input").onchange=ev=>{
+      const i=done.indexOf(id);if(ev.target.checked&&i<0)done.push(id);if(!ev.target.checked&&i>=0)done.splice(i,1);save();renderAll();
+    };
+    row.querySelector(".linkbtn").onclick=()=>{go("treinos");const el=document.getElementById("lib-"+id);if(el){el.open=true;el.scrollIntoView({block:"center"})}};
+    list.appendChild(row);
+  });
+  const pct=Math.round(done.filter(x=>p.ex.includes(x)).length/p.ex.length*100);
+  document.getElementById("bar").style.width=pct+"%";
+  document.getElementById("count").textContent=done.filter(x=>p.ex.includes(x)).length+" de "+p.ex.length+" feitos"+(pct===100?" · treino concluído":"");
+  renderCheck(k);
+}
+function renderCheck(k){
+  const s=store[k];
+  const en=document.getElementById("energy");en.innerHTML="";
+  [["1","Muito baixa"],["2","Baixa"],["3","Normal"],["4","Boa"]].forEach(([v,l])=>{
+    const b=document.createElement("button");b.textContent=l;if(s.energy===v)b.className="on";
+    b.onclick=()=>{s.energy=v;save();renderCheck(k)};en.appendChild(b);
+  });
+  const so=document.getElementById("sore");so.innerHTML="";
+  [["0","Nenhuma"],["1","Leve"],["2","Forte"],["3","Forte há +48 h"]].forEach(([v,l])=>{
+    const b=document.createElement("button");b.textContent=l;if(s.sore===v)b.className="on";
+    b.onclick=()=>{s.sore=v;save();renderCheck(k)};so.appendChild(b);
+  });
+  const a=document.getElementById("advice");let h="";
+  if(s.sore==="3")h=`<div class="note stop"><b>Não treine hoje.</b> Dor forte por mais de 48 h indica que o último treino passou do limite. Faça só respiração. Se houver urina escura ou fraqueza nova, procure atendimento e avise o médico.</div>`;
+  else if(s.sore==="2"||s.energy==="1")h=`<div class="note warn"><b>Dia de pegar leve.</b> Faça apenas alongamentos e respiração, ou reduza o tempo e as repetições pela metade.</div>`;
+  else if(s.sore==="1"||s.energy==="2")h=`<div class="note warn">Faça o treino com menos repetições e pausas maiores. Pare se o esforço passar de 4.</div>`;
+  else if(s.sore||s.energy)h=`<div class="note ok">Tudo certo para o treino de hoje, sempre no esforço 3–4.</div>`;
+  else h=`<p class="muted" style="font-size:.9rem">Responda antes de treinar para receber a orientação do dia.</p>`;
+  a.innerHTML=h;
+}
+function renderLib(){
+  const cats=["Todos",...new Set(Object.values(EX).map(e=>e.cat))];
+  const f=document.getElementById("filters");let cur="Todos";
+  function draw(){
+    f.innerHTML="";cats.forEach(c=>{const b=document.createElement("button");b.className="chip"+(c===cur?" on":"");b.textContent=c;b.onclick=()=>{cur=c;draw()};f.appendChild(b)});
+    const lib=document.getElementById("lib");lib.innerHTML="";
+    Object.entries(EX).filter(([,e])=>cur==="Todos"||e.cat===cur).forEach(([id,e])=>{
+      const d=document.createElement("details");d.className="lib";d.id="lib-"+id;
+      d.innerHTML=`<summary><div class="stack" style="gap:4px;min-width:0"><span class="eyebrow">${e.cat}</span><h3>${esc(e.n)}</h3><span class="dose">${esc(e.dose)}</span></div></summary>
+      <div class="in"><ol class="steps">${e.how.map(s=>"<li>"+esc(s)+"</li>").join("")}</ol>
+      <p><b>Por quê:</b> ${esc(e.why)}</p><div class="note warn"><b>Cuidado:</b> ${esc(e.care)}</div></div>`;
+      lib.appendChild(d);
+    });
+  }
+  draw();
+}
+function renderStatic(){
+  document.getElementById("foodTips").innerHTML=FOOD.map(x=>`<div class="card stack" style="gap:6px"><h3>${x.h}</h3><p>${x.p}</p></div>`).join("");
+  document.getElementById("mealDay").innerHTML=MEALS.map(m=>`<div class="meal"><b>${m[0]}</b><span>${m[1]}</span></div>`).join("");
+  document.getElementById("supps").innerHTML=SUPPS.map(x=>`<div class="card stack" style="gap:6px"><div style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;align-items:center"><h3>${x.h}</h3><span class="pill${x.warn?" warn":""}">${x.tag}</span></div><p>${x.p}</p></div>`).join("");
+  document.getElementById("care").innerHTML=CARE.map(x=>`<div class="card stack" style="gap:6px"><h3>${x.h}</h3><p>${x.p}</p></div>`).join("");
+  const ck=document.getElementById("checkups");store.checks=store.checks||{};
+  ck.innerHTML=CHECKS.map((c,i)=>`<div class="ex"><input type="checkbox" id="ck${i}" ${store.checks[i]?"checked":""}><div class="txt"><label for="ck${i}">${c}</label></div></div>`).join("");
+  CHECKS.forEach((c,i)=>document.getElementById("ck"+i).onchange=e=>{store.checks[i]=e.target.checked;save()});
+}
+function hello(){
+  const h=today.getHours();document.getElementById("hello").textContent=(h<12?"Bom dia":h<18?"Boa tarde":"Boa noite")+", bora se cuidar";
+}
+function go(v){
+  document.querySelectorAll(".view").forEach(m=>m.hidden=m.id!=="v-"+v);
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>go(b.dataset.v));
+document.getElementById("reset").onclick=function(){
+  if(this.dataset.c){store={};save();renderAll();renderStatic();this.dataset.c="";this.textContent="Apagar meu histórico deste aparelho";document.getElementById("resetMsg").textContent="Histórico apagado.";}
+  else{this.dataset.c="1";this.textContent="Toque de novo para confirmar";}
+};
+function renderAll(){renderWeek();renderDay()}
+hello();renderAll();renderLib();renderStatic();
+</script>
+
+<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
+</body>
+</html>
